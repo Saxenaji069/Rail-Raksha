@@ -1,0 +1,4 @@
+image_path,crowd_status,timestamp,count
+sample_image.jpg,Moderate,2023-04-10 12:00:00,15
+sample_image.jpg,Overcrowded,2023-04-10 12:05:00,30
+sample_image.jpg,Safe,2023-04-10 12:10:00,7

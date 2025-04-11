@@ -1,0 +1,12 @@
+timestamp,image_filename,people_count,crowd_level
+2025-04-11 05:18:43,test_15.jpg,10,Safe
+2025-04-11 05:19:04,crowd_sample.jpeg,22,Moderate
+2025-04-11 05:47:05,crowd_sample.jpeg,22,Moderate
+2025-04-11 12:03:55,test.jpg,0,Safe
+2025-04-11 12:04:10,test2.jpg,7,Safe
+2025-04-11 12:04:27,test3.jpeg,6,Safe
+2025-04-11 12:08:59,test3.jpeg,6,Safe
+2025-04-11 12:10:44,test3.jpeg,6,Safe
+2025-04-11 12:11:25,test3.jpeg,6,Safe
+2025-04-11 13:43:45,test5.jpg,21,Moderate
+2025-04-11 13:47:39,test4.jpg,19,Moderate
