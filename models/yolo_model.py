@@ -67,23 +67,33 @@ def detect_objects(image_path, model_path=None, conf_threshold=0.25):
         class_ids = result.boxes.cls.cpu().numpy()
         
         for box, score, class_id in zip(boxes, scores, class_ids):
-            x1, y1, x2, y2 = box.astype(int)
-            class_name = result.names[int(class_id)]
-            
-            # Draw bounding box
-            cv2.rectangle(annotated_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            
-            # Add label
-            label = f"{class_name}: {score:.2f}"
-            cv2.putText(annotated_image, label, (x1, y1 - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            
-            detections.append({
-                'box': box.tolist(),
-                'score': float(score),
-                'class_id': int(class_id),
-                'class_name': class_name
-            })
+            try:
+                # Safely unpack detection data
+                if len(box) >= 4:
+                    x1, y1, x2, y2 = box.astype(int)
+                else:
+                    print("⚠️ Invalid box format:", box)
+                    continue
+                
+                class_name = result.names[int(class_id)]
+                
+                # Draw bounding box
+                cv2.rectangle(annotated_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                
+                # Add label
+                label = f"{class_name}: {score:.2f}"
+                cv2.putText(annotated_image, label, (x1, y1 - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                
+                detections.append({
+                    'box': box.tolist(),
+                    'score': float(score),
+                    'class_id': int(class_id),
+                    'class_name': class_name
+                })
+            except Exception as e:
+                print(f"⚠️ Error processing detection: {str(e)}")
+                continue
     
     return annotated_image, detections
 
@@ -105,7 +115,7 @@ def display_detections(image_path, model_path=None, conf_threshold=0.25):
         )
         
         # Display the image with detections
-        st.image(annotated_image, caption="Detected Objects", use_column_width=True)
+        st.image(annotated_image, caption="Detected Objects", use_container_width=True)
         
         # Display detection results
         if detections:
@@ -123,20 +133,25 @@ def detect_people(image_path, model_path=None, conf_threshold=0.25):
     Detect people in an image using YOLOv5/YOLOv8.
     
     Args:
-        image_path (str): Path to the image file
+        image_path (str or np.ndarray): Path to the image file or a NumPy array containing the image
         model_path (str, optional): Path to a custom YOLO model
         conf_threshold (float): Confidence threshold for detections
-        
+    
     Returns:
         tuple: (annotated_image, detections, people_count)
     """
-    # Load the image
-    image = cv2.imread(str(image_path))
-    if image is None:
-        raise ValueError(f"Could not load image at {image_path}")
-    
-    # Convert to RGB for YOLO
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Check if image_path is a NumPy array or a file path
+    if isinstance(image_path, np.ndarray):
+        # Use the array directly
+        image = image_path
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) if len(image.shape) == 3 and image.shape[2] == 3 else image
+    else:
+        # Load the image from file
+        image = cv2.imread(str(image_path))
+        if image is None:
+            raise ValueError(f"Could not load image at {image_path}")
+        # Convert to RGB for YOLO
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # Load the YOLO model
     if model_path and os.path.exists(model_path):
@@ -171,22 +186,23 @@ def detect_people(image_path, model_path=None, conf_threshold=0.25):
                 confidence = float(box.conf[0])
                 
                 # Get bounding box coordinates
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                
-                # Add to detections list
-                detections.append({
-                    'class_name': class_name,
-                    'score': confidence,
-                    'bbox': [x1, y1, x2, y2]
-                })
+                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 
                 # Draw bounding box
                 cv2.rectangle(annotated_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 
                 # Add label
-                label = f"{class_name} {confidence:.2f}"
+                label = f"Person {confidence:.2f}"
                 cv2.putText(annotated_image, label, (x1, y1 - 10), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                
+                # Add to detections list
+                detections.append({
+                    'class_name': class_name,
+                    'confidence': confidence,
+                    'bbox': (x1, y1, x2, y2)
+                })
     
     return annotated_image, detections, people_count
 
