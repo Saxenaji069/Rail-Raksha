@@ -1,36 +1,18 @@
 import os
-import subprocess
-import pkg_resources
-from collections import Counter
-import colorsys
+
 
 # Set environment variable to prevent file watcher conflicts with PyTorch
 os.environ['STREAMLIT_SERVER_FILE_WATCHER_TYPE'] = 'none'
-
-required = {
-    'plotly',
-    'streamlit',
-    'opencv-python',
-    'numpy',
-    'pandas',
-    'ultralytics',
-    'Pillow'
-}
-installed = {pkg.key for pkg in pkg_resources.working_set}
-missing = required - installed
-
-if missing:
-    subprocess.check_call(["python", "-m", "pip", "install", *missing])
 
 import streamlit as st
 import cv2
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import os
 import plotly.express as px
 from datetime import datetime
 import time
+
 
 # Import custom modules
 from models.yolo_model import detect_people, classify_crowd, get_crowd_color, calculate_crowd_percentage
